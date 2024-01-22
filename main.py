@@ -1,11 +1,10 @@
-#!/opt/rh/rh-python38/root/usr/bin/python3
-
 import argparse;
 import random;
 import math;
 import pygame;
 
 from enum import Enum, auto;
+from collections import deque;
 
 ################################################################################
 
@@ -79,7 +78,7 @@ def Draw(pn : Noise1D, multY : int, ns : float):
 
   ballStart = screenSize[0] // 2 + 1.9 * (screenSize[0] // 4);
 
-  points = [];
+  points = deque();
 
   pygame.init();
 
@@ -133,19 +132,29 @@ def Draw(pn : Noise1D, multY : int, ns : float):
       noiseInd += noiseStep;
 
     if len(points) >= ballStart:
-      points.pop(0);
+      points.popleft();
 
     xOff = ballStart - len(points);
 
     for p in points:
-      pygame.draw.circle(screen, trailColor, (xOff, screenSize[1] // 2 - p), 1);
+      pygame.draw.circle(screen,
+                         trailColor,
+                         (xOff, screenSize[1] // 2 - p),
+                         1);
       xOff += 1;
 
-    pygame.draw.circle(screen, ballColor, (ballStart, screenSize[1] // 2 - noiseVal), 10);
+    pygame.draw.circle(screen,
+                       ballColor,
+                       (ballStart, screenSize[1] // 2 - noiseVal),
+                       10);
 
     Print(screen,
           font,
-          f"Noise params: seed = { pn._seed }, size = { pn._size }, step = { noiseStep }",
+          (
+            f"Noise params: seed = { pn._seed }, "
+            f"size = { pn._size }, "
+            f"step = { noiseStep }"
+          ),
           (0, 0),
           fontColor);
 
@@ -232,7 +241,7 @@ def main():
     exit(1);
 
   pn = Noise1D(size, seed=seed);
-
+  
   Draw(pn, multY, noiseStep);
 
 ################################################################################
