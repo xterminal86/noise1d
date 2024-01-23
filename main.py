@@ -94,14 +94,26 @@ def Draw(pn : Noise1D, multY : int, ns : float):
 
   c = pygame.time.Clock();
 
-  ballColor  = (0, 255, 0);
-  trailColor = (0, 128, 0);
-  fontColor  = (255, 255, 255);
-  gridColor  = (32, 32, 32);
+  periodMarkColor = (128, 0, 0);
+  ballColor       = (0, 255, 0);
+  trailColor      = (0, 128, 0);
+  fontColor       = (255, 255, 255);
+  gridColor       = (32, 32, 32);
 
   ballMultY = multY;
 
   iters = 0;
+
+  showPeriodMark = True;
+
+  periodHit = 0;
+
+  if noiseStep < 1.0:
+    periodHit = int(float(pn._size) / noiseStep);
+  else:
+    periodHit = pn._size;
+
+  periodCounter = 0;
 
   paused = False;
 
@@ -117,6 +129,8 @@ def Draw(pn : Noise1D, multY : int, ns : float):
           running = False;
         elif event.key == pygame.K_SPACE:
           paused = not paused;
+        elif event.key == pygame.K_p:
+          showPeriodMark = not showPeriodMark;
 
     screen.fill((0,0,0));
 
@@ -128,7 +142,12 @@ def Draw(pn : Noise1D, multY : int, ns : float):
     noiseVal = noiseRaw * ballMultY;
 
     if not paused:
-      points.append(noiseVal);
+      if periodCounter == periodHit:
+        points.append((noiseVal, periodMarkColor));
+        periodCounter = 0;
+      else:
+        points.append((noiseVal, trailColor));
+
       noiseInd += noiseStep;
 
     if len(points) >= ballStart:
@@ -137,10 +156,17 @@ def Draw(pn : Noise1D, multY : int, ns : float):
     xOff = ballStart - len(points);
 
     for p in points:
-      pygame.draw.circle(screen,
-                         trailColor,
-                         (xOff, screenSize[1] // 2 - p),
+      if showPeriodMark and p[1] == periodMarkColor:
+        pygame.draw.line(screen,
+                         p[1],
+                         (xOff, 0),
+                         (xOff, screenSize[1]),
                          1);
+      else:
+        pygame.draw.circle(screen,
+                           p[1],
+                           (xOff, screenSize[1] // 2 - p[0]),
+                           1);
       xOff += 1;
 
     pygame.draw.circle(screen,
@@ -153,7 +179,8 @@ def Draw(pn : Noise1D, multY : int, ns : float):
           (
             f"Noise params: seed = { pn._seed }, "
             f"size = { pn._size }, "
-            f"step = { noiseStep }"
+            f"step = { noiseStep }, "
+            f"showPeriod = { showPeriodMark }"
           ),
           (0, 0),
           fontColor);
@@ -179,25 +206,26 @@ def Draw(pn : Noise1D, multY : int, ns : float):
     Print(screen,
           font,
           "Press 'Space' to toggle pause",
-          (screenSize[0] // 2 + 100, screenSize[1] - 30),
+          (screenSize[0] - 340, screenSize[1] - 30),
           fontColor);
 
     Print(screen,
           font,
-          f"{ screenSize[0] }",
-          (screenSize[0] - 60, 0),
+          "Press 'P' to toggle period marker",
+          (screenSize[0] - 380, screenSize[1] - 60),
           fontColor);
 
     Print(screen,
           font,
-          f"{screenSize[1]}",
-          (screenSize[0] - 60, screenSize[1] - 30),
+          f"{ screenSize[0] }x{ screenSize[1] }",
+          (screenSize[0] - 110, 0),
           fontColor);
 
     pygame.display.flip();
 
     if not paused:
       iters += 1;
+      periodCounter += 1;
 
   pygame.quit();
 
@@ -240,8 +268,12 @@ def main():
     print("Size must be greater than 0!");
     exit(1);
 
+  if noiseStep <= 0.0:
+    print("Noise step cannot be zero!");
+    exit(1);
+
   pn = Noise1D(size, seed=seed);
-  
+
   Draw(pn, multY, noiseStep);
 
 ################################################################################
