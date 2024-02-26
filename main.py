@@ -1,73 +1,13 @@
 import argparse;
-import random;
-import math;
 import pygame;
 
-from enum import Enum, auto;
 from collections import deque;
 
-################################################################################
-
-class Interpolation(Enum):
-  LINEAR = auto()
-  COSINE = auto()
-
-class Noise1D:
-  _size  = 0;
-  _noise = [];
-  _amplitude = 1.0;
-  _seed = None;
-
-  # ----------------------------------------------------------------------------
-
-  def __init__(self, size : int, amplitude : float = 1.0, seed = None):
-    self._size = size;
-
-    self.Reset(size, amplitude, seed);
-
-  # ----------------------------------------------------------------------------
-
-  def Reset(self, newSize : int = 0, newAmp : float = 1.0, newSeed = None):
-    if (newSize > 0):
-      self._size = newSize;
-
-    self._amplitude = newAmp;
-    self._noise     = [ 0 ] * newSize;
-    self._seed      = newSeed;
-
-    random.seed(self._seed);
-
-    for i in range(self._size):
-      self._noise[i] = random.random() * self._amplitude;
-
-  # ----------------------------------------------------------------------------
-
-  def Noise(self, x : float, interpolation=Interpolation.COSINE):
-    ind = int(x);
-
-    t = math.modf(x)[0];
-
-    y1 = self._noise[ind       % self._size];
-    y2 = self._noise[(ind + 1) % self._size];
-
-    if interpolation is Interpolation.LINEAR:
-      val = (1 - t) * y1 + t * y2;
-    else:
-      val = (math.cos(t * math.pi) + 1) * 0.5 * (y1 - y2) + y2;
-
-    return val;
-
-  # ----------------------------------------------------------------------------
-
-  def PrintNoise(self):
-    for item in self._noise:
-      print(f"{item:.4f}, ", end="");
-
-    print();
+from noise1d import Noise1D;
 
 ################################################################################
 
-def Print(screen, font, text, pos : tuple, color : tuple):
+def PrintString(screen, font, text, pos : tuple, color : tuple):
   ts, _ = font.render(text, color);
   screen.blit(ts, pos);
 
@@ -174,52 +114,52 @@ def Draw(pn : Noise1D, multY : int, ns : float):
                        (ballStart, screenSize[1] // 2 - noiseVal),
                        10);
 
-    Print(screen,
-          font,
-          (
+    PrintString(screen,
+                font,
+                (
             f"Noise params: seed = { pn._seed }, "
             f"size = { pn._size }, "
             f"step = { noiseStep }, "
             f"showPeriod = { showPeriodMark }"
           ),
-          (0, 0),
-          fontColor);
+                (0, 0),
+                fontColor);
 
-    Print(screen,
-          font,
+    PrintString(screen,
+                font,
           f"Iterations = { iters }",
-          (0, screenSize[1] - 30),
-          fontColor);
+                (0, screenSize[1] - 30),
+                fontColor);
 
-    Print(screen,
-          font,
+    PrintString(screen,
+                font,
           f"Noise value: raw = {noiseRaw:.4f}, scaled = {noiseVal:.2f}",
-          (0, screenSize[1] - 60),
-          fontColor);
+                (0, screenSize[1] - 60),
+                fontColor);
 
-    Print(screen,
-          font,
+    PrintString(screen,
+                font,
           f"{ ballMultY }",
-          (screenSize[0] // 2 + 15, screenSize[1] // 2 - ballMultY - 30),
-          fontColor);
+                (screenSize[0] // 2 + 15, screenSize[1] // 2 - ballMultY - 30),
+                fontColor);
 
-    Print(screen,
-          font,
+    PrintString(screen,
+                font,
           "Press 'Space' to toggle pause",
-          (screenSize[0] - 340, screenSize[1] - 30),
-          fontColor);
+                (screenSize[0] - 340, screenSize[1] - 30),
+                fontColor);
 
-    Print(screen,
-          font,
+    PrintString(screen,
+                font,
           "Press 'P' to toggle period marker",
-          (screenSize[0] - 380, screenSize[1] - 60),
-          fontColor);
+                (screenSize[0] - 380, screenSize[1] - 60),
+                fontColor);
 
-    Print(screen,
-          font,
+    PrintString(screen,
+                font,
           f"{ screenSize[0] }x{ screenSize[1] }",
-          (screenSize[0] - 110, 0),
-          fontColor);
+                (screenSize[0] - 110, 0),
+                fontColor);
 
     pygame.display.flip();
 
