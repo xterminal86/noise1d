@@ -1,9 +1,10 @@
 import argparse;
 import pygame;
+import random;
 
 from collections import deque;
 
-from noise1d import Noise1D;
+from noise1d import Noise1D, PerlinNoise, Interpolation;
 
 ################################################################################
 
@@ -57,6 +58,15 @@ def Draw(pn : Noise1D, multY : int, ns : float):
 
   paused = False;
 
+  octs = 1;
+  noiseSize2 = pn._size;
+  seed2 = 1;
+  noise2Int = Interpolation.LINEAR
+  noise2 = PerlinNoise(noiseSize2,
+                       octs,
+                       seed2,
+                       noise2Int);
+
   while running:
 
     c.tick(60);
@@ -71,6 +81,34 @@ def Draw(pn : Noise1D, multY : int, ns : float):
           paused = not paused;
         elif event.key == pygame.K_p:
           showPeriodMark = not showPeriodMark;
+        elif event.key == pygame.K_o:
+          octs += 1;
+
+          if octs > 8:
+            octs = 1;
+
+          noise2 = PerlinNoise(noiseSize2,
+                               octs,
+                               seed2,
+                               noise2Int);
+
+        elif event.key == pygame.K_i:
+          if noise2Int == Interpolation.LINEAR:
+            noise2Int = Interpolation.COSINE;
+          else:
+            noise2Int = Interpolation.LINEAR;
+
+          noise2 = PerlinNoise(noiseSize2,
+                               octs,
+                               seed2,
+                               noise2Int);
+        elif event.key == pygame.K_s:
+          seed2 = random.random();
+
+          noise2 = PerlinNoise(noiseSize2,
+                               octs,
+                               seed2,
+                               noise2Int);
 
     screen.fill((0,0,0));
 
@@ -114,6 +152,14 @@ def Draw(pn : Noise1D, multY : int, ns : float):
                        (ballStart, screenSize[1] // 2 - noiseVal),
                        10);
 
+    for i in range(screenSize[0]):
+      n = noise2.Noise(i);
+
+      pygame.draw.circle(screen,
+                         (255, 0, 0),
+                         (i, (screenSize[1] // 2) - n * ballMultY),
+                         1);
+
     PrintString(screen,
                 font,
                 (
@@ -139,6 +185,12 @@ def Draw(pn : Noise1D, multY : int, ns : float):
 
     PrintString(screen,
                 font,
+                f"Octaves = { octs }",
+                (0, screenSize[1] - 90),
+                fontColor);
+
+    PrintString(screen,
+                font,
           f"{ ballMultY }",
                 (screenSize[0] // 2 + 15, screenSize[1] // 2 - ballMultY - 30),
                 fontColor);
@@ -151,8 +203,26 @@ def Draw(pn : Noise1D, multY : int, ns : float):
 
     PrintString(screen,
                 font,
-          "Press 'P' to toggle period marker",
+          "Press 'p' to toggle period marker",
                 (screenSize[0] - 380, screenSize[1] - 60),
+                fontColor);
+
+    PrintString(screen,
+                font,
+                "Press 'o' to increase octaves",
+                (screenSize[0] - 330, screenSize[1] - 90),
+                fontColor);
+
+    PrintString(screen,
+                font,
+                "Press 'i' to toggle interpolation",
+                (screenSize[0] - 360, screenSize[1] - 120),
+                fontColor);
+
+    PrintString(screen,
+                font,
+                "Press 's' to regenerate red noise",
+                (screenSize[0] - 370, screenSize[1] - 150),
                 fontColor);
 
     PrintString(screen,
@@ -160,6 +230,31 @@ def Draw(pn : Noise1D, multY : int, ns : float):
           f"{ screenSize[0] }x{ screenSize[1] }",
                 (screenSize[0] - 110, 0),
                 fontColor);
+
+    pygame.draw.line(screen,
+                     (0, 255, 0),
+                     (10, 60),
+                     (40, 60),
+                     1);
+
+    PrintString(screen,
+                font,
+                "random() + cosine interpolation",
+                (60, 50),
+                fontColor);
+
+    pygame.draw.line(screen,
+                     (255, 0, 0),
+                     (10, 90),
+                     (40, 90),
+                     1);
+
+    PrintString(screen,
+                font,
+                "Perlin noise + linear / cosine interpolation",
+                (60, 80),
+                fontColor);
+
 
     pygame.display.flip();
 

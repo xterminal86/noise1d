@@ -61,3 +61,75 @@ class Noise1D:
       print(f"{item:.4f}, ", end="");
 
     print();
+
+################################################################################
+
+class PerlinNoise:
+  _rnd     = [];
+  _noise   = [];
+  _size    = 0;
+  _seed    = None;
+  _octaves = 8;
+  _interpolation = Interpolation.LINEAR;
+
+  # ----------------------------------------------------------------------------
+
+  def __init__(self, size : int, octaves=8, seed = None, interpolation=Interpolation.LINEAR):
+    self._seed    = seed;
+    self._size    = size;
+    self._octaves = octaves;
+    self._interpolation = interpolation;
+
+    random.seed(self._seed);
+
+    self.Reset();
+
+  # ----------------------------------------------------------------------------
+
+  def Reset(self):
+    self._rnd   = [ 0.0 ] * self._size;
+    self._noise = [ 0.0 ] * self._size;
+
+    #
+    # Generate seed array.
+    #
+    for i in range(self._size):
+      self._rnd[i] = random.random();
+
+    for i in range(self._size):
+
+      noise = 0.0;
+      scale = 1.0;
+      normCoeff = 0;
+
+      for o in range(1, self._octaves):
+        pitch = (self._size >> o);
+
+        if pitch == 0:
+          break;
+
+        ind1 = (i // pitch) * pitch;
+        ind2 = (ind1 + pitch) % self._size;
+
+        blend = float(i - ind1) / float(pitch);
+
+        if self._interpolation == Interpolation.LINEAR:
+          sample = (1.0 - blend) * self._rnd[ind1] + blend * self._rnd[ind2];
+        else:
+          sample = (math.cos(blend * math.pi) + 1) * 0.5 * (self._rnd[ind1] - self._rnd[ind2]) + self._rnd[ind2];
+
+        noise += sample * scale;
+        normCoeff += scale;
+        scale /= 2.0;
+
+      #
+      # Rescale result back to [ 0.0 ; 1.0 ]
+      #
+      if normCoeff != 0:
+        self._noise[i] = noise / normCoeff;
+
+  # ----------------------------------------------------------------------------
+
+  def Noise(self, x : float) -> float:
+    ind = int(x) % self._size;
+    return self._noise[ind];
