@@ -13,4 +13,4 @@ optional arguments:
   --step STEP  Noise step. Affects drawing smoothness. Default: 0.025
 ```
 
-![](screenshot.png)
+![](screenshot.png?)
